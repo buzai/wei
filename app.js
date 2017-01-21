@@ -1,7 +1,16 @@
 var express = require('express');
 var app = express();
+var path = require('path');
+var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
+
+
 var logger = require('morgan')
 var wechat = require('wechat');
+var OAuth = require('wechat-oauth');
+var client = new OAuth('wx6a619f74fe901a24', '37fa566f9fa93d0cb1761aeaeccaff4f');
+
+
 // 37fa566f9fa93d0cb1761aeaeccaff4f
 var config = {
     token: 'node',
@@ -12,7 +21,28 @@ var config = {
 app.use(express.query());
 
 app.use(logger('dev'));
+app.use(cookieParser());
 
+
+app.set('views', '../index/index');
+app.engine('html', require('ejs').renderFile);
+app.set('view engine', 'html');
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.all('*', function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , Code, yourHeaderFeild');
+    res.header('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
+
+    if (req.method == 'OPTIONS') {
+        res.sendStatus(200);
+        /让options请求快速返回/
+    } else {
+        next();
+    }
+});
+app.use(express.static(path.normalize(__dirname + './index')));
+app.use("/public", express.static(path.normalize(__dirname + './public')));
 
 app.use('/wechat', wechat(config, function(req, res, next) {
     // 微信输入信息都在req.weixin上
@@ -39,13 +69,22 @@ app.use('/wechat', wechat(config, function(req, res, next) {
                 thumbMediaId: "thisThumbMediaId"
             }
         });
+    } else if (message.Content === '123') {
+        console.log(123)
+        var url = client.getAuthorizeURLForWebsite('http://lixue1992.6655.la/', 'state', 'scope');
+        res.reply([{
+            title: '你来我家接我吧',
+            description: '这是女神与高富帅之间的对话',
+            picurl: 'http://d.hiphotos.baidu.com/baike/s%3D220/sign=5adaf83fc8177f3e1434fb0f40ce3bb9/43a7d933c895d14326598eaa72f082025aaf070f.jpg',
+            url: url
+        }]);
     } else {
         // 回复高富帅(图文回复)
         res.reply([{
             title: '你来我家接我吧',
             description: '这是女神与高富帅之间的对话',
-            picurl: 'http://nodeapi.cloudfoundry.com/qrcode.jpg',
-            url: 'http://nodeapi.cloudfoundry.com/'
+            picurl: 'http://d.hiphotos.baidu.com/baike/s%3D220/sign=5adaf83fc8177f3e1434fb0f40ce3bb9/43a7d933c895d14326598eaa72f082025aaf070f.jpg',
+            url: 'http://lixue1992.6655.la/'
         }]);
     }
 }));
@@ -53,7 +92,8 @@ app.use('/wechat', wechat(config, function(req, res, next) {
 
 
 app.get('/', function(req, res) {
-    res.send('Hello World 大富!');
+    // res.send('Hello World 大富!');
+    res.sendFile(path.normalize(__dirname + '/index') + '/index.html');
 });
 
 var server = app.listen(80, function() {

@@ -1,7 +1,11 @@
 {
   "dependencies": {
+    "body-parser": "^1.16.0",
+    "cookie-parser": "^1.4.3",
+    "ejs": "^2.5.5",
     "express": "^4.14.0",
     "morgan": "^1.7.0",
-    "wechat": "^2.0.3"
+    "wechat": "^2.0.3",
+    "wechat-oauth": "^1.2.1"
   }
 }
